@@ -50,25 +50,24 @@ public class JsonDataValidator {
     private List<Predicate> buildPredicateList(String query) {
         List<Predicate> predicateList = new LinkedList<>();
         Matcher boolMatcher = booleanPattern.matcher(query);
-        int oldEndPos = 0;
+        Integer oldEndPos = null;
         while (boolMatcher.find()) {
             final int newBoolPos = boolMatcher.start();
-            final String pair = query.substring(oldEndPos, newBoolPos);
+            final String pair = query.substring(oldEndPos != null ? oldEndPos : 0, newBoolPos);
+            final Operator bool = query.substring(newBoolPos, boolMatcher.end()).equals(AND.val()) ? AND : OR;
+            addNewPredicateToList(pair, bool, predicateList);
             oldEndPos = boolMatcher.end();
-            final Operator logicOperator = query.substring(newBoolPos, boolMatcher.end()).equals(AND.val()) ? AND : OR;
-            final Predicate predicate = buildPredicate(pair, logicOperator);
-            if (predicate != null) {
-                predicateList.add(predicate);
-            }
         }
 
-        if (oldEndPos > 0) {
-            final String part = query.substring(oldEndPos);
-            final Predicate predicate = buildPredicate(part, null);
+        addNewPredicateToList(oldEndPos == null ? query : query.substring(oldEndPos), Operator.NONE, predicateList);
+        return predicateList;
+    }
+
+    private void addNewPredicateToList(String query, Operator bool, List<Predicate> predicateList) {
+        final Predicate predicate = buildPredicate(query, bool);
+        if (predicate != null) {
             predicateList.add(predicate);
         }
-
-        return predicateList;
     }
 
     /**
@@ -146,7 +145,7 @@ public class JsonDataValidator {
                         isValidComparing = isLessThanOrEqualTo(jsonElem, predicate);
                 }
 
-                query.append(isValidComparing).append(predicate.getBooleanOperator() != null ? predicate.getBooleanOperator().val() : "");
+                query.append(isValidComparing).append(predicate.getBooleanOperator().val());
             }
 
             String result = ExpressionUtil.simplify(query.toString());

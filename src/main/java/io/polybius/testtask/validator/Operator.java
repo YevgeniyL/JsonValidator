@@ -16,7 +16,8 @@ public enum Operator {
     lt("<"),
     eq("="),
     AND("&&"),
-    OR("||");
+    OR("||"),
+    NONE(null);
 
     private String value;
 
@@ -33,6 +34,6 @@ public enum Operator {
     }
 
     public String val() {
-        return this.value;
+        return this.value == null ? "" : this.value;
     }
 }

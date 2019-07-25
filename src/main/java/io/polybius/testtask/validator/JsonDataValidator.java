@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.polybius.testtask.utils.ExpressionUtil;
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -161,10 +162,13 @@ public class JsonDataValidator {
      *
      * @return Boolean
      */
-    private boolean isEqual(JsonElement jsonElement, Predicate predicate) {
-        return jsonElement.getAsJsonPrimitive().isNumber()
-                ? Double.valueOf(predicate.getValue()).equals(jsonElement.getAsDouble())
-                : jsonElement.getAsString().toLowerCase().contains(predicate.getValue().toLowerCase());
+    private boolean isEqual(JsonElement jsonElem, Predicate predicate) {
+        if (jsonElem.getAsJsonPrimitive().isString()) {
+            return jsonElem.getAsString().toLowerCase().contains(predicate.getValue().toLowerCase());
+        }
+
+        return isComparableNumbers(jsonElem, predicate)
+                && jsonElem.getAsJsonPrimitive().getAsBigDecimal().compareTo(new BigDecimal(predicate.getValue())) == 0;
     }
 
     /**
@@ -173,7 +177,8 @@ public class JsonDataValidator {
      * @return Boolean
      */
     private boolean isGreaterThan(JsonElement jsonElem, Predicate predicate) {
-        return Double.compare(Double.valueOf(predicate.getValue()), jsonElem.getAsDouble()) == -1;
+        return isComparableNumbers(jsonElem, predicate)
+                && jsonElem.getAsJsonPrimitive().getAsBigDecimal().compareTo(new BigDecimal(predicate.getValue())) > 0;
     }
 
     /**
@@ -182,8 +187,8 @@ public class JsonDataValidator {
      * @return Boolean
      */
     private boolean isGreaterThanOrEqualTo(JsonElement jsonElem, Predicate predicate) {
-        return Double.compare(jsonElem.getAsDouble(), Double.valueOf(predicate.getValue())) == 1
-                || Double.compare(jsonElem.getAsDouble(), Double.valueOf(predicate.getValue())) == 0;
+        return isComparableNumbers(jsonElem, predicate)
+                && jsonElem.getAsJsonPrimitive().getAsBigDecimal().compareTo(new BigDecimal(predicate.getValue())) >= 0;
     }
 
     /**
@@ -192,7 +197,8 @@ public class JsonDataValidator {
      * @return Boolean
      */
     private boolean isLessThan(JsonElement jsonElem, Predicate predicate) {
-        return Double.compare(jsonElem.getAsDouble(), Double.valueOf(predicate.getValue())) == -1;
+        return isComparableNumbers(jsonElem, predicate)
+                && jsonElem.getAsJsonPrimitive().getAsBigDecimal().compareTo(new BigDecimal(predicate.getValue())) < 0;
     }
 
     /**
@@ -201,7 +207,23 @@ public class JsonDataValidator {
      * @return Boolean
      */
     private boolean isLessThanOrEqualTo(JsonElement jsonElem, Predicate predicate) {
-        return Double.compare(jsonElem.getAsDouble(), Double.valueOf(predicate.getValue())) == -1
-                || Double.compare(jsonElem.getAsDouble(), Double.valueOf(predicate.getValue())) == 0;
+        return isComparableNumbers(jsonElem, predicate)
+                && jsonElem.getAsJsonPrimitive().getAsBigDecimal().compareTo(new BigDecimal(predicate.getValue())) <= 0;
+    }
+
+    /**
+     * Method check that jsonElement is a number type and check scale size on two types.
+     *
+     * @return boolean false if not number. Or it is a int and decimal
+     */
+    private boolean isComparableNumbers(JsonElement jsonElement, Predicate predicate) {
+        if (!jsonElement.getAsJsonPrimitive().isNumber())
+            return false;
+
+        final BigDecimal predicateDecimal = new BigDecimal(predicate.getValue());
+        final BigDecimal jsonDecimal = jsonElement.getAsJsonPrimitive().getAsBigDecimal();
+        final int predicateScale = predicateDecimal.scale();
+        final int jsonScale = jsonDecimal.scale();
+        return predicateScale == jsonScale || predicateScale != 0 && jsonScale != 0;
     }
 }

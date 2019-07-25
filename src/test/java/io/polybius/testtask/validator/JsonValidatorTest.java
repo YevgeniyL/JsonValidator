@@ -1,5 +1,6 @@
 package io.polybius.testtask.validator;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.junit.Assert;
@@ -7,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -18,6 +20,7 @@ import java.util.List;
 @RunWith(BlockJUnit4ClassRunner.class)
 public class JsonValidatorTest {
     private static final double DELTA = 0;
+    private static final Gson gson = new Gson();
 
     /**
      * Then query is empty, result need contain all objects
@@ -69,8 +72,8 @@ public class JsonValidatorTest {
     }
 
     @Test
-    public void testEqualityForNumber() {
-        final String query = "age=10";
+    public void testEqualityForNumbers() {
+        String query = "age=10";
         final String fieldAge = "age";
         final int valueInt = 10;
         List<JsonObject> result = getValidatedIntData(query, fieldAge, valueInt);
@@ -79,12 +82,13 @@ public class JsonValidatorTest {
         Assert.assertTrue(jsonObject.has(fieldAge));
         Assert.assertEquals(valueInt, jsonObject.get(fieldAge).getAsInt());
 
-        final double valueDouble = 10.0;
-        result = getValidatedDoubleData(query, fieldAge, valueDouble);
+        query = "age=10.0";
+        final BigDecimal valueBigDecimal = new BigDecimal("10.0");
+        result = getValidatedBIgDecimalData(query, fieldAge, valueBigDecimal);
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(valueDouble, jsonObject.get(fieldAge).getAsDouble(), DELTA);
+        Assert.assertEquals(valueBigDecimal, jsonObject.get(fieldAge).getAsBigDecimal());
     }
 
     @Test
@@ -94,13 +98,13 @@ public class JsonValidatorTest {
     }
 
     @Test
-    public void testEqualityNumberForWrongDouble() {
-        List<JsonObject> result = getValidatedDoubleData("age=10", "age", 10.1);
+    public void testEqualityNumberForWrongDecimal() {
+        List<JsonObject> result = getValidatedBIgDecimalData("age=10", "age", new BigDecimal("10.1"));
         Assert.assertEquals(0, result.size());
     }
 
     @Test
-    public void testGreaterThanOrEqual() {
+    public void testGreaterThanOrEqualInts() {
         final String query = "age>=10";
         final String fieldAge = "age";
         int value = 10;
@@ -116,29 +120,41 @@ public class JsonValidatorTest {
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
         Assert.assertEquals(value, jsonObject.get(fieldAge).getAsInt());
-
-        double doubleValue = 10.1;
-        result = getValidatedDoubleData(query, fieldAge, doubleValue);
-        Assert.assertEquals(1, result.size());
-        jsonObject = result.get(0);
-        Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
     }
 
     @Test
-    public void testGreaterThanOrEqualForWrongInt() {
+    public void testGreaterThanOrEqualBigDecimals() {
+        final String query = "age>=10.1";
+        final String fieldAge = "age";
+        BigDecimal bigDecimal = new BigDecimal("10.1");
+        List<JsonObject> result = getValidatedBIgDecimalData(query, fieldAge, bigDecimal);
+        Assert.assertEquals(1, result.size());
+        JsonObject jsonObject = result.get(0);
+        Assert.assertTrue(jsonObject.has(fieldAge));
+        Assert.assertEquals(bigDecimal, jsonObject.get(fieldAge).getAsBigDecimal());
+
+        bigDecimal = new BigDecimal("11.5");
+        result = getValidatedBIgDecimalData("age>=10.1", fieldAge, bigDecimal);
+        Assert.assertEquals(1, result.size());
+        jsonObject = result.get(0);
+        Assert.assertTrue(jsonObject.has(fieldAge));
+        Assert.assertEquals(bigDecimal, jsonObject.get(fieldAge).getAsBigDecimal());
+    }
+
+    @Test
+    public void testGreaterThanOrEqualForWrongInts() {
         List<JsonObject> result = getValidatedIntData("age>=10", "age", 9);
         Assert.assertEquals(0, result.size());
     }
 
     @Test
-    public void testGreaterThanOrEqualForWrongDouble() {
-        List<JsonObject> result = getValidatedDoubleData("age>=10", "age", 9.9);
+    public void testGreaterThanOrEqualForWrongDecimal() {
+        List<JsonObject> result = getValidatedBIgDecimalData("age>=10.0", "age", new BigDecimal("9.9"));
         Assert.assertEquals(0, result.size());
     }
 
     @Test
-    public void testGreaterThan() {
+    public void testGreaterThanInts() {
         final String query = "age>10";
         final String fieldAge = "age";
         final int value = 11;
@@ -148,13 +164,19 @@ public class JsonValidatorTest {
         JsonObject jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
         Assert.assertEquals(value, jsonObject.get(fieldAge).getAsInt());
+    }
 
-        double doubleValue = 10.1;
-        result = getValidatedDoubleData(query, fieldAge, doubleValue);
+    @Test
+    public void testGreaterThanBigDecimals() {
+        final String query = "age>10.1";
+        final String fieldAge = "age";
+        BigDecimal bigDecimal = new BigDecimal("10.9");
+        List<JsonObject> result = getValidatedBIgDecimalData(query, fieldAge, bigDecimal);
+
         Assert.assertEquals(1, result.size());
-        jsonObject = result.get(0);
+        JsonObject jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
+        Assert.assertEquals(bigDecimal, jsonObject.get(fieldAge).getAsBigDecimal());
     }
 
     @Test
@@ -164,13 +186,13 @@ public class JsonValidatorTest {
     }
 
     @Test
-    public void testGreaterThanForWrongDouble() {
-        List<JsonObject> result = getValidatedDoubleData("age>10", "age", 9.9);
+    public void testGreaterThanForWrongDecimal() {
+        List<JsonObject> result = getValidatedBIgDecimalData("age>10.1", "age", new BigDecimal("10.1"));
         Assert.assertEquals(0, result.size());
     }
 
     @Test
-    public void testLessThanOrEqual() {
+    public void testLessThanOrEqualInts() {
         final String query = "age<=10";
         final String fieldAge = "age";
         int value = 10;
@@ -186,13 +208,25 @@ public class JsonValidatorTest {
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
         Assert.assertEquals(value, jsonObject.get(fieldAge).getAsInt());
+    }
 
-        double doubleValue = 9.9;
-        result = getValidatedDoubleData(query, fieldAge, doubleValue);
+    @Test
+    public void testLessThanOrEqual() {
+        final String query = "age<=10.0";
+        final String fieldAge = "age";
+        BigDecimal decimalValue = new BigDecimal("10.0");
+        List<JsonObject> result = getValidatedBIgDecimalData(query, fieldAge, decimalValue);
+        Assert.assertEquals(1, result.size());
+        JsonObject jsonObject = result.get(0);
+        Assert.assertTrue(jsonObject.has(fieldAge));
+        Assert.assertEquals(decimalValue, jsonObject.get(fieldAge).getAsBigDecimal());
+
+        decimalValue = new BigDecimal("9.9");
+        result = getValidatedBIgDecimalData(query, fieldAge, decimalValue);
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
+        Assert.assertEquals(decimalValue, jsonObject.get(fieldAge).getAsBigDecimal());
     }
 
     @Test
@@ -202,13 +236,13 @@ public class JsonValidatorTest {
     }
 
     @Test
-    public void testLessThanOrEqualForWrongDouble() {
-        List<JsonObject> result = getValidatedDoubleData("age<=10", "age", 10.1);
+    public void testLessThanOrEqualForWrongDecimal() {
+        List<JsonObject> result = getValidatedBIgDecimalData("age<=10.0", "age", new BigDecimal("10.1"));
         Assert.assertEquals(0, result.size());
     }
 
     @Test
-    public void testLessThan() {
+    public void testLessThanInts() {
         final String query = "age<10";
         final String fieldAge = "age";
         final int value = 9;
@@ -218,13 +252,19 @@ public class JsonValidatorTest {
         JsonObject jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
         Assert.assertEquals(value, jsonObject.get(fieldAge).getAsInt());
+    }
 
-        double doubleValue = 9.9;
-        result = getValidatedDoubleData(query, fieldAge, doubleValue);
+    @Test
+    public void testLessThanBigDecimals() {
+        final String query = "age<10.0";
+        final String fieldAge = "age";
+        BigDecimal decimalValue = new BigDecimal("9.9");
+        List<JsonObject> result = getValidatedBIgDecimalData(query, fieldAge, decimalValue);
+
         Assert.assertEquals(1, result.size());
-        jsonObject = result.get(0);
+        JsonObject jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
+        Assert.assertEquals(decimalValue, jsonObject.get(fieldAge).getAsBigDecimal());
     }
 
     @Test
@@ -234,8 +274,8 @@ public class JsonValidatorTest {
     }
 
     @Test
-    public void testLessThanForWrongDouble() {
-        List<JsonObject> result = getValidatedDoubleData("age<10", "age", 10.1);
+    public void testLessThanForWrongDecimal() {
+        List<JsonObject> result = getValidatedBIgDecimalData("age<10.0", "age", new BigDecimal("10.0"));
         Assert.assertEquals(0, result.size());
     }
 
@@ -244,7 +284,7 @@ public class JsonValidatorTest {
      */
     @Test
     public void testForExpectAllValidInputData() {
-        final String query = "name =Bob &&age>=10 && age<=40.0";
+        final String query = "name =Bob &&age>=10 && age<=40";
         final String fieldName1 = "name";
         final String value1 = "Bobby";
         final String fieldName2 = "age";
@@ -269,7 +309,7 @@ public class JsonValidatorTest {
      */
     @Test
     public void testForCollectAllValidInputDataToArray() {
-        final String query = "name =Bob &&age>=10 && age<=40.0";
+        final String query = "name =Bob &&age>=10 && age<=40";
         final String fieldName1 = "name";
         final String value1 = "Bobby";
         final String fieldName2 = "age";
@@ -318,7 +358,7 @@ public class JsonValidatorTest {
         return validate(query, jsonObj);
     }
 
-    private List<JsonObject> getValidatedDoubleData(String query, String fieldName, double jsonValue) {
+    private List<JsonObject> getValidatedBIgDecimalData(String query, String fieldName, BigDecimal jsonValue) {
         JsonObject jsonObj = new JsonObject();
         jsonObj.add(fieldName, new JsonPrimitive(jsonValue));
         return validate(query, jsonObj);

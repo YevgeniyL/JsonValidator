@@ -19,8 +19,7 @@ public enum Operator {
     OR("||"),
     NONE(null);
 
-    private String value;
-
+    private final String value;
     private final static List<Operator> logicOperators = Arrays.stream(Operator.values())
             .filter(operator -> !"&&".equals(operator.val()) && !"||".equals(operator.val()))
             .collect(Collectors.toList());

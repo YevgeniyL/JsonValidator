@@ -17,6 +17,7 @@ import java.util.List;
  */
 @RunWith(BlockJUnit4ClassRunner.class)
 public class JsonValidatorTest {
+    private static final double DELTA = 0;
 
     /**
      * Then query is empty, result need contain all objects
@@ -83,7 +84,7 @@ public class JsonValidatorTest {
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(valueDouble, jsonObject.get(fieldAge).getAsDouble(), 2);
+        Assert.assertEquals(valueDouble, jsonObject.get(fieldAge).getAsDouble(), DELTA);
     }
 
     @Test
@@ -121,7 +122,7 @@ public class JsonValidatorTest {
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), 2);
+        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
     }
 
     @Test
@@ -153,7 +154,7 @@ public class JsonValidatorTest {
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), 2);
+        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
     }
 
     @Test
@@ -191,7 +192,7 @@ public class JsonValidatorTest {
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), 2);
+        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
     }
 
     @Test
@@ -223,7 +224,7 @@ public class JsonValidatorTest {
         Assert.assertEquals(1, result.size());
         jsonObject = result.get(0);
         Assert.assertTrue(jsonObject.has(fieldAge));
-        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), 2);
+        Assert.assertEquals(doubleValue, jsonObject.get(fieldAge).getAsDouble(), DELTA);
     }
 
     @Test

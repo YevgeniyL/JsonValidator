@@ -72,8 +72,8 @@ public class JsonDataValidator {
 
     /**
      * Create filled predicate.
-     * Compare in string
-     * by pattern '(?<gtOrEq>>\s*=)|(?<ltOrEq><\s*=)|(?<gt>>)|(?<lt><)|(?<eq>=)'
+     * Find first matched text in 'pair' by pattern '(?<gtOrEq>>\s*=)|(?<ltOrEq><\s*=)|(?<gt>>)|(?<lt><)|(?<eq>=)'
+     * And setup
      *
      * @param pair unparsed query parametr
      * @param bool input boolean operator
@@ -87,8 +87,8 @@ public class JsonDataValidator {
                     .findFirst().orElse(null);
 
             if (foundOperator != null) {
-                String groupValue = matcher.group(foundOperator.name());
-                return buildNewPredicate(pair, groupValue, foundOperator, bool);
+                String unformattedComparator = matcher.group(foundOperator.name());
+                return buildNewPredicate(pair, unformattedComparator, foundOperator, bool);
             }
         }
 
@@ -122,37 +122,37 @@ public class JsonDataValidator {
         boolean isContained = predicates.stream()
                 .allMatch(predicate -> jsonObj.has(predicate.getName()));
 
-        if (isContained) {
-            StringBuilder query = new StringBuilder();
-            Boolean isValidComparing;
-            for (Predicate predicate : predicates) {
-                isValidComparing = null;
-                JsonElement jsonElem = jsonObj.get(predicate.getName());
-                switch (predicate.getCompareOperator()) {
-                    case eq:
-                        isValidComparing = isEqual(jsonElem, predicate);
-                        break;
-                    case gt:
-                        isValidComparing = isGreaterThan(jsonElem, predicate);
-                        break;
-                    case gtOrEq:
-                        isValidComparing = isGreaterThanOrEqualTo(jsonElem, predicate);
-                        break;
-                    case lt:
-                        isValidComparing = isLessThan(jsonElem, predicate);
-                        break;
-                    case ltOrEq:
-                        isValidComparing = isLessThanOrEqualTo(jsonElem, predicate);
-                }
-
-                query.append(isValidComparing).append(predicate.getBooleanOperator().val());
-            }
-
-            String result = ExpressionUtil.simplify(query.toString());
-            return Boolean.parseBoolean(result);
+        if (!isContained) {
+            return false;
         }
 
-        return false;
+        StringBuilder query = new StringBuilder();
+        Boolean isValidComparing;
+        for (Predicate predicate : predicates) {
+            isValidComparing = null;
+            JsonElement jsonElem = jsonObj.get(predicate.getName());
+            switch (predicate.getCompareOperator()) {
+                case eq:
+                    isValidComparing = isEqual(jsonElem, predicate);
+                    break;
+                case gt:
+                    isValidComparing = isGreaterThan(jsonElem, predicate);
+                    break;
+                case gtOrEq:
+                    isValidComparing = isGreaterThanOrEqualTo(jsonElem, predicate);
+                    break;
+                case lt:
+                    isValidComparing = isLessThan(jsonElem, predicate);
+                    break;
+                case ltOrEq:
+                    isValidComparing = isLessThanOrEqualTo(jsonElem, predicate);
+            }
+
+            query.append(isValidComparing).append(predicate.getBooleanOperator().val());
+        }
+
+        String result = ExpressionUtil.simplify(query.toString());
+        return Boolean.parseBoolean(result);
     }
 
     /**
